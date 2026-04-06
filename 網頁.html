@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>點餐系統</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+        .item { background: white; margin: 5px; padding: 10px; border-radius: 5px; cursor: pointer; display: inline-block; border: 1px solid #ddd; }
+        .item:hover { background: #e0e0e0; }
+        #cart { margin-top: 20px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { background: #ff9800; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>🍔 快速點餐測試</h2>
+    <div id="menu">
+        <div class="item" onclick="add('漢堡', 100)">🍔 漢堡 $100</div>
+        <div class="item" onclick="add('可樂', 30)">🥤 可樂 $30</div>
+        <div class="item" onclick="add('薯條', 50)">🍟 薯條 $50</div>
+    </div>
+
+    <div id="cart">
+        <h3>🛒 我的購物車</h3>
+        <ul id="list"></ul>
+        <p>總金額: $<span id="total">0</span></p>
+        <button onclick="check()">送出訂單</button>
+    </div>
+
+    <script>
+        let total = 0;
+        function add(name, price) {
+            const li = document.createElement('li');
+            li.textContent = name + " - $" + price;
+            document.getElementById('list').appendChild(li);
+            total += price;
+            document.getElementById('total').textContent = total;
+        }
+        function check() {
+            if(total === 0) return alert("車內空空如也！");
+            alert("訂單已送出！總共 $" + total);
+            document.getElementById('list').innerHTML = "";
+            total = 0;
+            document.getElementById('total').textContent = "0";
+        }
+    </script>
+</body>
+</html>
