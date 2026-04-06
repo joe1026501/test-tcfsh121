@@ -8,12 +8,13 @@
         body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
         .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        input, textarea { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        input, textarea { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        button { padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
         .message-item { background: #fff; border-bottom: 1px solid #eee; padding: 10px 0; }
         .msg-name { font-weight: bold; color: #333; }
         .msg-time { font-size: 0.8em; color: #999; margin-left: 10px; }
-        .msg-content { margin-top: 5px; color: #555; }
+        .msg-content { margin-top: 5px; color: #555; word-wrap: break-word; }
     </style>
 </head>
 <body>
@@ -22,7 +23,7 @@
     <h2>🚀 GitHub 即時留言牆</h2>
     <div class="input-group">
         <input type="text" id="username" placeholder="你的暱稱">
-        <textarea id="content" placeholder="輸入留言..."></textarea>
+        <textarea id="content" placeholder="輸入留言..." rows="3"></textarea>
         <button id="sendBtn">送出留言</button>
     </div>
     <div id="messageList">讀取中...</div>
@@ -32,49 +33,57 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // ⚠️ 請在此處替換成你自己 Firebase 專案的 Config！
     const firebaseConfig = {
-  apiKey: "AIzaSyAnXOFj8WlwnhSsafzk7pb7mQns6C2XOOU",
-  authDomain: "tcfsh121-39745.firebaseapp.com",
-  projectId: "tcfsh121-39745",
-  storageBucket: "tcfsh121-39745.firebasestorage.app",
-  messagingSenderId: "728144870430",
-  appId: "1:728144870430:web:948099ce5b0c62e66d820f",
-  measurementId: "G-PTXXPMKBQ1"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+        apiKey: "AIzaSyAnXOFj8WlwnhSsafzk7pb7mQns6C2XOOU",
+        authDomain: "tcfsh121-39745.firebaseapp.com",
+        projectId: "tcfsh121-39745",
+        storageBucket: "tcfsh121-39745.firebasestorage.app",
+        messagingSenderId: "728144870430",
+        appId: "1:728144870430:web:948099ce5b0c62e66d820f",
+        measurementId: "G-PTXXPMKBQ1"
     };
 
+    // 初始化 Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const msgCol = collection(db, "messages");
 
     // 送出留言
     document.getElementById('sendBtn').onclick = async () => {
-        const name = document.getElementById('username').value || "匿名人士";
-        const text = document.getElementById('content').value;
+        const nameInput = document.getElementById('username');
+        const contentInput = document.getElementById('content');
+        
+        const name = nameInput.value || "匿名人士";
+        const text = contentInput.value;
+        
         if (!text) return alert("請輸入內容");
 
-        await addDoc(msgCol, {
-            name: name,
-            content: text,
-            createdAt: serverTimestamp()
-        });
-        document.getElementById('content').value = "";
+        try {
+            await addDoc(msgCol, {
+                name: name,
+                content: text,
+                createdAt: serverTimestamp()
+            });
+            contentInput.value = "";
+        } catch (e) {
+            console.error("錯誤原因: ", e);
+            alert("留言失敗，請檢查 Firebase Rules 權限！");
+        }
     };
 
-    // 即時監聽資料庫，有人留言會自動更新
+    // 即時監聽資料庫
     const q = query(msgCol, orderBy("createdAt", "desc"));
     onSnapshot(q, (snapshot) => {
         const list = document.getElementById('messageList');
-        list.innerHTML = "";
+        let html = "";
+        if (snapshot.empty) {
+            list.innerHTML = "目前沒有留言";
+            return;
+        }
         snapshot.forEach(doc => {
             const data = doc.data();
             const time = data.createdAt ? data.createdAt.toDate().toLocaleString() : "傳送中...";
-            list.innerHTML += `
+            html += `
                 <div class="message-item">
                     <span class="msg-name">${data.name}</span>
                     <span class="msg-time">${time}</span>
@@ -82,6 +91,7 @@ const analytics = getAnalytics(app);
                 </div>
             `;
         });
+        list.innerHTML = html;
     });
 </script>
 </body>
