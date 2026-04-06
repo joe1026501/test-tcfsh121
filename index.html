@@ -1,83 +1,50 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <title>匿名留言板</title>
-    <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 10px; background: #f4f4f9; }
-        #board { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        #messages { height: 300px; overflow-y: auto; border: 1px solid #ddd; margin-bottom: 10px; padding: 10px; }
-        .msg { margin-bottom: 10px; padding: 5px; border-bottom: 1px solid #eee; }
-        input, button { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { background: #007bff; color: white; cursor: pointer; border: none; }
-        button:hover { background: #0056b3; }
-    </style>
-</head>
-<body>
-
-<div id="board">
-    <h2>匿名留言板</h2>
-    <div id="messages">載入中...</div>
-    <input type="text" id="userInput" placeholder="你的暱稱 (可不填)" maxlength="10">
-    <input type="text" id="msgInput" placeholder="想說些什麼？" maxlength="100">
-    <button onclick="sendMessage()">送出留言</button>
-</div>
-
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase 設定
 const firebaseConfig = {
   apiKey: "AIzaSyAnXOFj8WlwnhSsafzk7pb7mQns6C2XOOU",
   authDomain: "tcfsh121-39745.firebaseapp.com",
   projectId: "tcfsh121-39745",
   storageBucket: "tcfsh121-39745.firebasestorage.app",
   messagingSenderId: "728144870430",
-  appId: "1:728144870430:web:948099ce5b0c62e66d820f",
-  measurementId: "G-PTXXPMKBQ1"
+  appId: "1:728144870430:web:948099ce5b0c62e66d820f"
 };
 
-// Initialize Firebase
+// 初始化（只做一次）
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const db = getFirestore(app);
+const msgCol = collection(db, "messages");
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const msgCol = collection(db, "messages");
-
-    // 監聽資料庫變化 (即時更新)
-    const q = query(msgCol, orderBy("timestamp", "asc"));
-    onSnapshot(q, (snapshot) => {
-        const div = document.getElementById('messages');
-        div.innerHTML = '';
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            div.innerHTML += `<div class="msg"><b>${data.user || '匿名'}:</b> ${data.text}</div>`;
-        });
-        div.scrollTop = div.scrollHeight;
+// 即時監聽
+const q = query(msgCol, orderBy("timestamp", "asc"));
+onSnapshot(q, (snapshot) => {
+    const div = document.getElementById('messages');
+    div.innerHTML = '';
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        div.innerHTML += `<div class="msg"><b>${data.user || '匿名'}:</b> ${data.text}</div>`;
     });
+    div.scrollTop = div.scrollHeight;
+});
 
-    // 發送留言
-    window.sendMessage = async () => {
-        const user = document.getElementById('userInput').value;
-        const text = document.getElementById('msgInput').value;
-        if (!text) return alert("請輸入內容");
-        
+// 發送留言
+window.sendMessage = async () => {
+    const user = document.getElementById('userInput').value;
+    const text = document.getElementById('msgInput').value;
+    if (!text) return alert("請輸入內容");
+
+    try {
         await addDoc(msgCol, {
             user: user,
             text: text,
             timestamp: serverTimestamp()
         });
         document.getElementById('msgInput').value = '';
-    };
+    } catch (e) {
+        console.error(e);
+        alert("寫入失敗");
+    }
+};
 </script>
-</body>
-</html>
