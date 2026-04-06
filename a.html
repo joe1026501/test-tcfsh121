@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>匿名交流牆</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input, textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        .message-list {
+            border-top: 2px solid #eee;
+            padding-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .message-item {
+            background: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 5px solid var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .message-header {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .message-content {
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>💬 匿名留言板</h2>
+    
+    <div class="input-group">
+        <input type="text" id="username" placeholder="你的暱稱">
+        <textarea id="content" rows="3" placeholder="想說些什麼嗎？"></textarea>
+        <button onclick="postMessage()">送出留言</button>
+    </div>
+
+    <div class="message-list" id="messageList">
+        </div>
+</div>
+
+<script>
+    // 頁面載入時讀取舊留言
+    window.onload = function() {
+        loadMessages();
+    };
+
+    function postMessage() {
+        const name = document.getElementById('username').value || "匿名人士";
+        const content = document.getElementById('content').value;
+
+        if (!content) {
+            alert("請輸入內容！");
+            return;
+        }
+
+        const message = {
+            name: name,
+            content: content,
+            time: new Date().toLocaleString()
+        };
+
+        // 取得目前的留言列表
+        let messages = JSON.parse(localStorage.getItem('myMessages')) || [];
+        messages.unshift(message); // 新留言排在最前面
+
+        // 存回瀏覽器儲存空間 (LocalStorage)
+        localStorage.setItem('myMessages', JSON.stringify(messages));
+
+        // 清空輸入框
+        document.getElementById('content').value = "";
+        
+        loadMessages();
+    }
+
+    function loadMessages() {
+        const list = document.getElementById('messageList');
+        const messages = JSON.parse(localStorage.getItem('myMessages')) || [];
+        
+        list.innerHTML = messages.map(m => `
+            <div class="message-item">
+                <div class="message-header">${m.name} <small style="color:#999; font-weight:normal;">• ${m.time}</small></div>
+                <div class="message-content">${m.content}</div>
+            </div>
+        `).join('');
+    }
+</script>
+
+</body>
+</html>
